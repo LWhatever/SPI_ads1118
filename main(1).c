@@ -1,5 +1,5 @@
 #include <msp430.h>
-
+//using the build-in SPI
 
 void Port_Mapping(void);
 
