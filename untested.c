@@ -120,7 +120,7 @@ unsigned char ADS1118_Read(unsigned char data)   //SPI为全双工通信方式
 //	cnt++;
 //	mode = (cnt==10)?1:0;
 //	cnt %= 10;
-//}ADS1118_Current
+//}
 
 void ADS1118_Get_UI(void)
 {
@@ -142,17 +142,30 @@ void ADS1118_Get_UI(void)
 	{
 		Data_REG=0xFFFF-Data_REG;//把0xFFFF改成0x10000
 		if(!mode)
-			ADS1118_Voltage=(-1.0)*((Data_REG*FS/0x8000));
+		{
+			ADS1118_Current=(-1.0)*((Data_REG*FS/0x8000));  //采集上次转换的数值（此次配置的寄存器用于下一次转换）
+			mode = 1;
+		}
 		else
-			ADS1118_Current=(-1.0)*((Data_REG*FS/0x8000));
+		{
+			ADS1118_Voltage=(-1.0)*((Data_REG*FS/0x8000));
+			mode = 0;
+		}
 	}
 	else
 	{
 		if(!mode)
-			ADS1118_Voltage=(1.0)*((Data_REG*FS/32768));
-		else
+		{
 			ADS1118_Current=(1.0)*((Data_REG*FS/32768));
+			mode = 1;
+		}
+		else
+		{
+			ADS1118_Voltage=(1.0)*((Data_REG*FS/32768));
+			mode = 0;
+		}
 	}
+
 }
 
 void Timer_Init()
@@ -188,39 +201,53 @@ int main(void)
 #pragma vector=TIMER0_A0_VECTOR
 __interrupt void TIMER0_A0_ISR(void)
 {
-	int mini = 0;
+	int mini_v = 0, mini_c = 0;
 	CLR_ADS1118_CS;
 
-	cnt++;
-	mode = (cnt==10)?1:0;
-	cnt %= 10;
 	if(mode)
-		Config_M = 0x44;
+		Config_M = (unsigned char)0x44;
 	else
-		Config_M = 0x54;
+		Config_M = (unsigned char)0x54;
 
 	__delay_cycles(6800);
 	ADS1118_Get_UI();
 	__delay_cycles(800);
 	//SET_ADS1118_CS;
 	__delay_cycles(6400);
- 	mini = (int)(ADS1118_Voltage*1000)%1000;
+ 	mini_v = (int)(ADS1118_Voltage*1000)%1000;
+ 	mini_c = (int)(ADS1118_Current*1000)%1000;
 	OLED_ShowString(29, 6, "Vo=");
+	OLED_ShowString(29, 4, "Io=");
 	OLED_ShowNum(53, 6, ((int)(ADS1118_Voltage*1000))/1000, 1, 16);
+	OLED_ShowNum(53, 4, ((int)(ADS1118_Current*1000))/1000, 1, 16);
+	OLED_ShowChar(53+8, 4,'.');
 	OLED_ShowChar(53+8, 6,'.');
-	if(mini<10)
+	if(mini_v<10)
 	{
 		OLED_ShowNum(53+16, 6, 0, 1, 16);
 		OLED_ShowNum(53+24, 6, 0, 1, 16);
-		OLED_ShowNum(53+32, 6, mini, 1, 16);
+		OLED_ShowNum(53+32, 6, mini_v, 1, 16);
 	}
-	else if(mini>9&&mini<100)
+	else if(mini_v>9&&mini_v<100)
 	{
 		OLED_ShowNum(53+16, 6, 0, 1, 16);
-		OLED_ShowNum(53+24, 6, mini, 2, 16);
+		OLED_ShowNum(53+24, 6, mini_v, 2, 16);
 	}
 	else
-		OLED_ShowNum(53+16, 6, mini, 3, 16);
+		OLED_ShowNum(53+16, 6, mini_v, 3, 16);
+	if(mini_c<10)
+	{
+		OLED_ShowNum(53+16, 4, 0, 1, 16);
+		OLED_ShowNum(53+24, 4, 0, 1, 16);
+		OLED_ShowNum(53+32, 4, mini_c, 1, 16);
+	}
+	else if(mini_v>9&&mini_v<100)
+	{
+		OLED_ShowNum(53+16, 4, 0, 1, 16);
+		OLED_ShowNum(53+24, 4, mini_c, 2, 16);
+	}
+	else
+		OLED_ShowNum(53+16, 4, mini_c, 3, 16);
+	OLED_ShowChar(53+40, 4,'A');
 	OLED_ShowChar(53+40, 6,'V');
 }
-
