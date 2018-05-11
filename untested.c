@@ -1,6 +1,7 @@
 #include <msp430.h> 
 #include "oled.h"
 #include "bmp.h"
+#Author:LWhatever_WHU
 
 #define      ADS1118_CS         BIT7  //这是配置单片机的管脚，与ads1118上的名字对应
 #define      ADS1118_CLK        BIT1
