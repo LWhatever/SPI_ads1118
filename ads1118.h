@@ -1,8 +1,8 @@
 //**************************************************
-//simulating SPI communication successfully!!
-//reffering the code from https://blog.csdn.net/cirs_q/article/details/47421155
-//i can't simplely include the head file mentioned above  so i changed the timing sequence of the configure function.
-//Anthor:LWhatever
+// simulating SPI communication successfully!!
+// reffering the code from https://blog.csdn.net/cirs_q/article/details/47421155
+// Correct some timing sequence issues
+// Anthor:LWhatever
 
 #include <msp430.h> 
 //#include "oled.h"
